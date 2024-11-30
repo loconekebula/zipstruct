@@ -1,12 +1,11 @@
+import struct
 from typing import Annotated, Type, BinaryIO
 
 from annotated_types import Len
 from pydantic import BaseModel, conbytes
-import struct
+from src.zipstruct.common import unpack_little_endian
 
-from src.zipstruct.model.common import unpack_little_endian
-
-#??????????? Little endian (b'\x06\x05KP'), in file is stored from the least significant byte (hence b'PK\x05\x06')
+# Little endian (b'\x06\x05KP')
 EOCD_SIGNATURE = b'\x06\x05\x4b\x50'
 INT_EOCD_SIGNATURE = 0x06054b50
 EOCD_MIN_LENGTH = 22
@@ -21,7 +20,7 @@ class RawEocd(BaseModel):
     Each attribute is annotated with its expected type in order to simplify parsing
     """
 
-    signature: Annotated[conbytes(min_length=4, max_length=4), int] = EOCD_SIGNATURE
+    signature: Annotated[conbytes(min_length=4, max_length=4), int] = struct.pack('<I', INT_EOCD_SIGNATURE)
     """ 
     End of Central Directory (EOCD) signature (4 bytes).
     This field has a fixed value of '0x06054b50'.
@@ -76,6 +75,7 @@ class RawEocd(BaseModel):
     """
 
     def unpack(self):
+        unpacked = {}
         for name, field_info in self.model_fields.items():
             metadata = field_info.metadata
             len_constraint: Len = metadata[1]
@@ -83,55 +83,18 @@ class RawEocd(BaseModel):
             data = getattr(self, name)
             if len(data) < len_constraint.min_length or len(data) > len_constraint.max_length:
                 raise
-            print(f"{name} | {parse_type} | {len_constraint}")
-            print(unpack_little_endian(data, parse_type))
 
+            # print(f"{name} | {parse_type} | {len_constraint}")
+            unpacked[name] = unpack_little_endian(data, parse_type)
+        return unpacked
 
+    def __len__(self):
+        size = 0
+        for name, _ in self.model_fields.items():
+            if name == 'comment':
+                continue
+            size += len(getattr(self, name))
 
-def read_eocd(f: BinaryIO) -> RawEocd:
-    """ Find the EOCD signature by searching backward in the file """
-    # Seek to the end of the file
-    f.seek(0, 2)
-
-    # Start searching from the end of the file (in order to take care of the variable comment)
-    max_comment_length = 2 ** 16
-    file_size = f.tell()
-    search_range = min(file_size, 22 + max_comment_length)
-    f.seek(-search_range, 2)
-    data = f.read(search_range)
-
-    # Find the EOCD signature (0x06054b50) within the search range
-    eocd_offset = data.rfind(struct.pack('<I', 0x06054b50))
-    if eocd_offset == -1:
-        raise ValueError("EOCD signature not found. Not a valid ZIP file.")
-
-    # Slice out the EOCD record
-    eocd = data[eocd_offset:]
-    if len(eocd) < EOCD_MIN_LENGTH:
-        raise ValueError("Incomplete EOCD record.")
-
-    eocd_signature = struct.unpack('<I', eocd[:4])[0]
-    if eocd_signature != 0x06054b50:
-        raise ValueError("Invalid EOCD signature.")
-
-    # Extract the comment, if any
-    comment_length = struct.unpack('<H', eocd[20:22])[0]
-    comment = eocd[22:22 + comment_length] if comment_length > 0 else b''
-    assert len(f.read()) == 0
-
-    reocd = RawEocd(
-        disk_number=eocd[4:6],
-        central_dir_start_disk_number=eocd[6:8],
-        total_entries_in_central_dir_on_this_disk=eocd[8:10],
-        total_entries_in_central_dir=eocd[10:12],
-        size_of_central_dir=eocd[12:16],
-        offset_of_start_of_central_directory=eocd[16:20],
-        comment_length=eocd[20:22],
-        comment=comment
-    )
-    reocd.unpack()
-    return reocd
-
-
-if __name__ == "__main__":
-    print(read_eocd("/home/kebula/Desktop/projects/ZipHashC2PA/data/inp/original_0.xlsx"))
+        if size != EOCD_MIN_LENGTH:
+            raise ValueError(f"EOCD record size is {size} (without comment), expected {EOCD_MIN_LENGTH}")
+        return size + len(self.comment)
