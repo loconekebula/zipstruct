@@ -1,5 +1,5 @@
 import struct
-from typing import Annotated, Type, BinaryIO
+from typing import Annotated, Type
 
 from annotated_types import Len
 from pydantic import BaseModel, conbytes

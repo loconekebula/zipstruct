@@ -1,9 +1,10 @@
 import struct
 from typing import BinaryIO
 
-from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, EOCD_SIGNATURE, INT_EOCD_SIGNATURE
-from src.zipstruct.lfh import LOGGER
+from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, INT_EOCD_SIGNATURE
 
+import logging
+LOGGER = logging.getLogger("zipstruct")
 
 def search_eocd_signature(f: BinaryIO) -> int:
     """ Find the EOCD signature by searching backward in the file """
