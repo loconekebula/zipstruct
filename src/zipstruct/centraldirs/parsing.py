@@ -89,6 +89,7 @@ def parse_central_directory(f: BinaryIO, offset: int) -> CentralDirectory:
 
 
 def unpack_from_raw(rcd: RawCentralDirectory):
+    ### 4.4.4 general purpose bit flag: (2 bytes)
     gpb = struct.unpack('<H', rcd.general_purpose_flags)[0]
     utf8 = bool(gpb & GeneralPurposeBitMasks.UTF8_LANGUAGE_ENCODING.value)
     encoding = 'utf-8' if utf8 else 'cp437'

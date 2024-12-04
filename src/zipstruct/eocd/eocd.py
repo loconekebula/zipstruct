@@ -155,5 +155,3 @@ class EndOfCentralDirectory(BaseModel):
     def __len__(self):
         return len(self.raw)
 
-    def decode_comment(self, encoding = 'utf-8'):
-        self.comment = self.raw.comment.decode(encoding)

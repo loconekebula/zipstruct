@@ -5,7 +5,6 @@ from intervaltree import IntervalTree
 from typing import BinaryIO
 
 from src.zipstruct.centraldirs.centraldir import CentralDirectory
-from src.zipstruct.common import unpack_little_endian
 from src.zipstruct.eocd import parsing as eocd_parser
 from src.zipstruct.centraldirs import parsing as cd_parser
 from src.zipstruct.eocd.eocd import RawEocd, EndOfCentralDirectory
@@ -17,11 +16,12 @@ LOGGER = logging.getLogger("zipstruct")
 
 
 class ParsingState:
+    eocd: EndOfCentralDirectory
+
     def __init__(self, path: str):
         self.path = path
         self.size = os.path.getsize(path)
         self.tree = IntervalTree()
-        self.eocd: list[EndOfCentralDirectory] = []
         self.cds: list[CentralDirectory] = []
         self.lfhs : list[RawLocalFileHeader] = []
 
@@ -59,8 +59,7 @@ class ParsingState:
             offset = cd.relative_offset_of_local_header
             lfh = lfh_parser.parse_local_file_header(file, offset)
             self.tree.addi(offset, offset + len(lfh))
-            LOGGER.debug(f"File '{unpack_little_endian(lfh.file_name, encoding='utf-8')}' has "
-                         f"compressed size: {cd.compressed_size}"
+            LOGGER.debug(f"File '{lfh.file_name}' has compressed size: {cd.compressed_size}"
                          f" and uncompressed size: {cd.uncompressed_size}")
             lfhs.append(lfh)
         return lfhs
