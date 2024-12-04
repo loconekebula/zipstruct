@@ -32,7 +32,7 @@ class RawLocalFileHeader(BaseModel):
     Indicates compatibility requirements for extracting the file.
     """
 
-    general_purpose_bit_flag: conbytes(min_length=2, max_length=2)
+    general_purpose_flags: conbytes(min_length=2, max_length=2)
     """
     Bit flags indicating properties of the file (2 bytes).
     These may include encryption, data compression method specifics, and more.
@@ -134,7 +134,7 @@ class LocalFileHeader(BaseModel):
     Indicates compatibility requirements for extracting the file.
     """
 
-    general_purpose_bit_flag: conint(ge=0, lt=2**16)
+    general_purpose_flags: conint(ge=0, lt=2 ** 16)
     """
     Bit flags indicating properties of the file (2 bytes).
     These may include encryption, data compression method specifics, and more.

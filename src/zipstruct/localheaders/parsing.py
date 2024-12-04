@@ -18,7 +18,7 @@ def parse_local_file_header(file: BinaryIO, offset: int):
     rlfh = RawLocalFileHeader(
         signature                  = signature,
         version_needed_to_extract  = file.read(2),
-        general_purpose_bit_flag   = file.read(2),
+        general_purpose_flags      = file.read(2),
         compression_method         = file.read(2),
         file_last_mod_time         = file.read(2),
         file_last_mod_date         = file.read(2),
@@ -52,7 +52,7 @@ def unpack_from_raw(rlfh: RawLocalFileHeader):
         raw                        = rlfh,
         signature                  = unpack_little_endian(rlfh.signature),
         version_needed_to_extract  = unpack_little_endian(rlfh.version_needed_to_extract),
-        general_purpose_bit_flag   = gpb,
+        general_purpose_flags      = gpb,
         compression_method         = unpack_little_endian(rlfh.compression_method),
         file_last_mod_time         = rlfh.file_last_mod_time,
         file_last_mod_date         = rlfh.file_last_mod_date,
