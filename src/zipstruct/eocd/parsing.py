@@ -1,7 +1,8 @@
 import struct
 from typing import BinaryIO
 
-from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, INT_EOCD_SIGNATURE
+from src.zipstruct.common import GeneralPurposeBitMasks, unpack_little_endian
+from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, INT_EOCD_SIGNATURE, EndOfCentralDirectory
 
 import logging
 LOGGER = logging.getLogger("zipstruct")
@@ -25,7 +26,7 @@ def search_eocd_signature(f: BinaryIO) -> int:
     return eocd_offset
 
 
-def parse_eocd(f: BinaryIO, eocd_offset: int) -> RawEocd:
+def parse_eocd(f: BinaryIO, eocd_offset: int) -> EndOfCentralDirectory:
     # Seek to the start of the EOCD and load it in memory
     f.seek(eocd_offset, 0)
     eocd = f.read(-1)
@@ -47,23 +48,32 @@ def parse_eocd(f: BinaryIO, eocd_offset: int) -> RawEocd:
     comment_length = struct.unpack('<H', eocd[20:22])[0]
     comment = eocd[22:22 + comment_length] if comment_length > 0 else b''
 
-    return RawEocd(
-        disk_number=eocd[4:6],
-        central_dir_start_disk_number=eocd[6:8],
-        total_entries_in_central_dir_on_this_disk=eocd[8:10],
-        total_entries_in_central_dir=eocd[10:12],
-        size_of_central_dir=eocd[12:16],
-        offset_of_start_of_central_directory=eocd[16:20],
-        comment_length=eocd[20:22],
-        comment=comment
+    reocd = RawEocd(
+        signature                                 = eocd[0:4],
+        disk_number                               = eocd[4:6],
+        central_dir_start_disk_number             = eocd[6:8],
+        total_entries_in_central_dir_on_this_disk = eocd[8:10],
+        total_entries_in_central_dir              = eocd[10:12],
+        size_of_central_dir                       = eocd[12:16],
+        offset_of_start_of_central_directory      = eocd[16:20],
+        comment_length                            = eocd[20:22],
+        comment                                   = comment
     )
 
+    return unpack_from_raw(reocd)
 
-if __name__ == "__main__":
-    from pprint import pprint
-    path = "/home/kebula/Desktop/projects/ZipHashC2PA/data/inp/original_0.xlsx"
-    with open(path, mode="rb") as f:
-        offset = search_eocd_signature(f)
-        reocd = parse_eocd(f, offset)
-        pprint(reocd)
-        pprint(reocd.unpack())
+
+def unpack_from_raw(reocd: RawEocd):
+    return EndOfCentralDirectory(
+        raw                                       = reocd,
+        signature                                 = unpack_little_endian(reocd.signature),
+        disk_number                               = unpack_little_endian(reocd.disk_number),
+        central_dir_start_disk_number             = unpack_little_endian(reocd.central_dir_start_disk_number),
+        total_entries_in_central_dir_on_this_disk = unpack_little_endian(reocd.total_entries_in_central_dir_on_this_disk),
+        total_entries_in_central_dir              = unpack_little_endian(reocd.total_entries_in_central_dir),
+        size_of_central_dir                       = unpack_little_endian(reocd.size_of_central_dir),
+        offset_of_start_of_central_directory      = unpack_little_endian(reocd.offset_of_start_of_central_directory),
+        comment_length                            = unpack_little_endian(reocd.comment_length),
+        comment                                   = unpack_little_endian(reocd.comment, encoding='utf-8'),
+    )
+

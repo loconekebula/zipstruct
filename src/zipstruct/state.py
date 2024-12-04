@@ -4,11 +4,11 @@ import pprint
 from intervaltree import IntervalTree
 from typing import BinaryIO
 
-from src.zipstruct.centraldirs.centraldir import RawCentralDirectory, CentralDirectory
+from src.zipstruct.centraldirs.centraldir import CentralDirectory
 from src.zipstruct.common import unpack_little_endian
 from src.zipstruct.eocd import parsing as eocd_parser
 from src.zipstruct.centraldirs import parsing as cd_parser
-from src.zipstruct.eocd.eocd import RawEocd
+from src.zipstruct.eocd.eocd import RawEocd, EndOfCentralDirectory
 from src.zipstruct.localheaders.lfh import RawLocalFileHeader
 from src.zipstruct.localheaders import parsing as lfh_parser
 
@@ -21,14 +21,14 @@ class ParsingState:
         self.path = path
         self.size = os.path.getsize(path)
         self.tree = IntervalTree()
-        self.eocd: list[RawEocd] = []
-        self.cds: list[RawCentralDirectory] = []
+        self.eocd: list[EndOfCentralDirectory] = []
+        self.cds: list[CentralDirectory] = []
         self.lfhs : list[RawLocalFileHeader] = []
 
     def load(self, file: BinaryIO):
         LOGGER.debug("Loading EOCD...")
         self.eocd = self._load_eocd(file)
-        cd_start = unpack_little_endian(self.eocd.offset_of_start_of_central_directory)
+        cd_start = self.eocd.offset_of_start_of_central_directory
         self.cds = self._load_central_directories(file, cd_start)
         self.lfhs = self._load_local_file_headers(file, self.cds)
         return self
@@ -37,7 +37,7 @@ class ParsingState:
         eocd_offset = eocd_parser.search_eocd_signature(file)
         LOGGER.debug(f"Found EOCD signature in byte {eocd_offset}")
         eocd = eocd_parser.parse_eocd(file, eocd_offset)
-        end = eocd_offset + len(eocd)
+        end = eocd_offset + len(eocd.raw)
         if self.size != end:
             raise ValueError("EOCD end should match the file end")
         self.tree.addi(eocd_offset, end)

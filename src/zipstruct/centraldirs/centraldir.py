@@ -1,4 +1,3 @@
-import struct
 from pydantic import BaseModel, conbytes, conint
 from typing import Annotated
 
@@ -15,7 +14,6 @@ class RawCentralDirectory(BaseModel):
     that provides metadata for each file in the archive.
 
     Details can be found in section '4.3.12' of: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-
     """
 
     signature: conbytes(min_length=4, max_length=4) = CENTRAL_DIR_SIGNATURE
@@ -150,7 +148,7 @@ class CentralDirectory(BaseModel):
 
     raw: RawCentralDirectory
     """
-    All the fields of this class in raw binary (little-endian) format
+    Useful if you need all the fields of this class in the original raw binary (little-endian) format
     """
 
     signature: int = INT_CENTRAL_DIR_SIGNATURE
