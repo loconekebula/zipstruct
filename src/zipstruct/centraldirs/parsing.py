@@ -1,13 +1,15 @@
 import struct
 from typing import BinaryIO
+from src.zipstruct.common import GeneralPurposeBitMasks, unpack_little_endian
 from src.zipstruct.centraldirs.centraldir import (
-    RawCentralDirectory, INT_CENTRAL_DIR_SIGNATURE, MIN_CENTRAL_DIR_LENGTH, CENTRAL_DIR_SIGNATURE
+    RawCentralDirectory, INT_CENTRAL_DIR_SIGNATURE, MIN_CENTRAL_DIR_LENGTH, CENTRAL_DIR_SIGNATURE, CentralDirectory
 )
+
 import logging
 LOGGER = logging.getLogger("zipstruct")
 
 
-def parse_central_directories(f: BinaryIO, start_offset: int):
+def parse_central_directories(f: BinaryIO, start_offset: int) -> list[CentralDirectory]:
     f.seek(start_offset, 0)
 
     signature = f.read(4)
@@ -18,18 +20,18 @@ def parse_central_directories(f: BinaryIO, start_offset: int):
         cd = parse_central_directory(f, offset)
         cds.append(cd)
         signature = f.read(4)
-        offset += len(cd)
+        offset += len(cd.raw)
     LOGGER.debug(f"Stopped to parse central directories at byte {offset}, no central directory "
                  f"signature was found (bytes read: {signature})")
-    total = sum([len(cd) for cd in cds])
+    total = sum([len(cd.raw) for cd in cds])
     expected = offset - start_offset
     if total != expected:
-        raise ValueError(f"'__len__' function of {RawCentralDirectory.__name__} may be bugged, expected len "
+        raise ValueError(f"'__len__' function of {CentralDirectory.__name__} may be bugged, expected len "
                          f"({expected}) is different from the total amount of byte parsed: {expected}")
     return cds
 
 
-def parse_central_directory(f: BinaryIO, offset: int) -> RawCentralDirectory:
+def parse_central_directory(f: BinaryIO, offset: int) -> CentralDirectory:
     # Seek to the start of the CentralDirectory and load it in memory
     f.seek(offset, 0)
     cd = f.read(MIN_CENTRAL_DIR_LENGTH)
@@ -81,5 +83,35 @@ def parse_central_directory(f: BinaryIO, offset: int) -> RawCentralDirectory:
         raise ValueError(f"Incomplete CentralDirectory record, mismatch between "
                          f"expected ({expected}) and current ({current}) amount")
 
-    LOGGER.debug(f"Parsed central directory of file '{name.decode('utf-8')}' from bytes {offset}:{offset+len(rcd)}")
-    return rcd
+    cd = unpack_from_raw(rcd)
+    LOGGER.debug(f"Parsed central directory of file '{cd.file_name}' from bytes {offset}:{offset+len(rcd)}")
+    return cd
+
+
+def unpack_from_raw(rcd: RawCentralDirectory):
+    gpb = struct.unpack('<H', rcd.general_purpose_flags)[0]
+    utf8 = bool(gpb & GeneralPurposeBitMasks.UTF8_LANGUAGE_ENCODING.value)
+    encoding = 'utf-8' if utf8 else 'cp437'
+    return CentralDirectory(
+        raw                             = rcd,
+        signature                       = unpack_little_endian(rcd.signature),
+        version_made_by                 = unpack_little_endian(rcd.version_made_by),
+        version_needed_to_extract       = unpack_little_endian(rcd.version_needed_to_extract),
+        general_purpose_flags           = gpb,
+        compression_method              = unpack_little_endian(rcd.compression_method),
+        last_mod_file_time              = rcd.last_mod_file_time,
+        last_mod_file_date              = rcd.last_mod_file_date,
+        crc32                           = rcd.crc32,
+        compressed_size                 = unpack_little_endian(rcd.compressed_size),
+        uncompressed_size               = unpack_little_endian(rcd.uncompressed_size),
+        file_name_length                = unpack_little_endian(rcd.file_name_length),
+        extra_field_length              = unpack_little_endian(rcd.extra_field_length),
+        file_comment_length             = unpack_little_endian(rcd.file_comment_length),
+        disk_number_start               = unpack_little_endian(rcd.disk_number_start),
+        internal_file_attributes        = rcd.internal_file_attributes,
+        external_file_attributes        = rcd.external_file_attributes,
+        relative_offset_of_local_header = unpack_little_endian(rcd.relative_offset_of_local_header),
+        file_name                       = unpack_little_endian(rcd.file_name, encoding),
+        extra_field                     = rcd.extra_field,
+        file_comment                    = unpack_little_endian(rcd.signature, encoding),
+    )

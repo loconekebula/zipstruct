@@ -1,13 +1,19 @@
 import struct
 from enum import Enum
-from typing import Type
 
+import logging
+LOGGER = logging.getLogger("zipstruct")
 
-def unpack_little_endian(data: bytes, new_type: Type):
-    if new_type == str:
-        return data.decode('utf-8')
-    if new_type is None or len(data) == 0:
-        return None
+def unpack_little_endian(data: bytes, encoding: str = None):
+    if len(data) == 0:
+        return '' if encoding else b''
+
+    if encoding is not None:
+        try:
+            return data.decode(encoding)
+        except Exception as e:
+            LOGGER.error(f"Cannot decode the passed bytes from '{encoding}', cause: {str(e)}")
+            return data
 
     length = len(data)
     if length == 1:
@@ -41,7 +47,8 @@ class GeneralPurposeBitMasks(Enum):
     # UNUSED_BIT_8 = 1 << 8
     # UNUSED_BIT_9 = 1 << 9
     # UNUSED_BIT_10 = 1 << 10
-    UTF_FILENAME = 1 << 11
+    # Bit 11: If set, the filename and comment fields for current file MUST be encoded using UTF-8
+    UTF8_LANGUAGE_ENCODING = 1 << 11
     # Bit 12: Reserved by PKWARE for enhanced compression.
     # RESERVED_BIT_12 = 1 << 12
     # ENCRYPTED_CENTRAL_DIR = 1 << 13

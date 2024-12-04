@@ -39,7 +39,7 @@ def parse_local_file_header(file: BinaryIO, offset: int):
     lfh.file_name = file.read(fn_length) if fn_length > 0 else b''
     lfh.extra_field = file.read(ef_length) if ef_length > 0 else b''
 
-    LOGGER.debug(f"Parsed local file header of file '{unpack_little_endian(lfh.file_name, new_type=str)}'")
+    LOGGER.debug(f"Parsed local file header of file '{unpack_little_endian(lfh.file_name, encoding='utf-8')}'")
 
     ### 4.4.4 general purpose bit flag: (2 bytes)
     # gpb = struct.unpack('<H', lfh.general_purpose_bit_flag)[0]

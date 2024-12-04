@@ -6,6 +6,7 @@ from zipstruct.state import ParsingState
 import zipfile
 import shutil
 
+
 if __name__ == "__main__":
     path = "/home/kebula/Desktop/projects/ZipHashC2PA/data/inp/original_0.xlsx"
     """
@@ -52,4 +53,4 @@ if __name__ == "__main__":
     import struct
     for lfh in ps.lfhs:
         gpb = struct.unpack('<H', lfh.general_purpose_bit_flag)[0]
-        LOGGER.debug(f"General purpose bits '{bin(gpb)}' - {unpack_little_endian(lfh.file_name, new_type=str)}")
+        LOGGER.debug(f"General purpose bits '{bin(gpb)}' - {unpack_little_endian(lfh.file_name, encoding='utf-8')}")
