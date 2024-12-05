@@ -1,6 +1,6 @@
-from src.zipstruct.common import unpack_little_endian, GeneralPurposeBitMasks
+from src.zipstruct.utils.common import unpack_little_endian, GeneralPurposeBitMasks
 from src.zipstruct.localheaders.lfh import LFH_SIGNATURE, RawLocalFileHeader, LocalFileHeader
-from typing import BinaryIO, List
+from typing import BinaryIO
 import struct
 
 import logging

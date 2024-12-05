@@ -1,6 +1,6 @@
 import struct
 from typing import BinaryIO
-from src.zipstruct.common import GeneralPurposeBitMasks, unpack_little_endian
+from src.zipstruct.utils.common import GeneralPurposeBitMasks, unpack_little_endian
 from src.zipstruct.centraldirs.centraldir import (
     RawCentralDirectory, INT_CENTRAL_DIR_SIGNATURE, MIN_CENTRAL_DIR_LENGTH, CENTRAL_DIR_SIGNATURE, CentralDirectory
 )

@@ -1,7 +1,7 @@
 import logging
 from typing import BinaryIO
 
-from src.zipstruct.common import GeneralPurposeBitMasks, unpack_little_endian
+from src.zipstruct.utils.common import GeneralPurposeBitMasks, unpack_little_endian
 from src.zipstruct.descriptors.descriptor import RawDataDescriptor, DATA_DESCRIPTOR_SIGNATURE, DataDescriptor
 from src.zipstruct.localheaders.lfh import LocalFileHeader
 

@@ -1,7 +1,7 @@
 import struct
 from typing import BinaryIO
 
-from src.zipstruct.common import GeneralPurposeBitMasks, unpack_little_endian
+from src.zipstruct.utils.common import unpack_little_endian
 from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, INT_EOCD_SIGNATURE, EndOfCentralDirectory
 
 import logging
