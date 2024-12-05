@@ -1,9 +1,7 @@
 import hashlib
 import logging
 import os.path
-from pprint import pprint
 
-from src.ziphash.ziphash import compute_zip_hash
 from src.zipstruct.localheaders.lfh import LOGGER
 from src.zipstruct.utils.zipentry import ParsedZip
 import zipfile
@@ -36,8 +34,6 @@ if __name__ == "__main__":
     path = "/home/kebula/Desktop/projects/ZipHashC2PA/data/tmp/appended.zip"
     appended_pz = ParsedZip.load(path)
 
-    print(compute_zip_hash(original_pz))
-    print(compute_zip_hash(appended_pz))
     LOGGER.info(original_pz.parsing_state)
     LOGGER.info(appended_pz.parsing_state)
 
