@@ -98,10 +98,8 @@ class RawLocalFileHeader(BaseModel):
 
     def __len__(self):
         size = 0
-        for name, _ in self.model_fields.items():
-            if name == 'file_name' or name == 'extra_field':
-                continue
-            size += len(getattr(self, name))
+        for _, value in self.model_dump(exclude={'file_name', 'extra_field'}).items():
+            size += len(value)
 
         if size != MIN_LOCAL_FILE_HEADER:
             raise ValueError(f"LocalFileHeader record size is {size} (without fields having variable size), "

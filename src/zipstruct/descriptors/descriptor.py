@@ -37,10 +37,8 @@ class RawDataDescriptor(BaseModel):
 
     def __len__(self):
         size = 0
-        for name, _ in self.model_fields.items():
-            if name == 'signature' and self.signature is None:
-                continue
-            size += len(getattr(self, name))
+        for _, value in self.model_dump(exclude={'signature'}).items():
+            size += len(value)
 
         if DATA_DESCRIPTOR_MAX_LENGTH < size < DATA_DESCRIPTOR_MIN_LENGTH:
             raise ValueError(f"'DataDescriptor' record size is {size}, expected size in "

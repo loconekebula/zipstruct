@@ -123,10 +123,8 @@ class RawCentralDirectory(BaseModel):
 
     def __len__(self):
         size = 0
-        for name, _ in self.model_fields.items():
-            if name == 'file_name' or name == 'extra_field' or name == 'file_comment':
-                continue
-            size += len(getattr(self, name))
+        for _, value in self.model_dump(exclude={'file_name', 'extra_field', 'file_comment'}).items():
+            size += len(value)
 
         if size != MIN_CENTRAL_DIR_LENGTH:
             raise ValueError(f"CentralDirectory record size is {size} (without fields having variable size), "

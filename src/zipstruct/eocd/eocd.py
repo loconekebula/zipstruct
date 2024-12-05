@@ -68,10 +68,8 @@ class RawEocd(BaseModel):
 
     def __len__(self):
         size = 0
-        for name, _ in self.model_fields.items():
-            if name == 'comment':
-                continue
-            size += len(getattr(self, name))
+        for _, value in self.model_dump(exclude={'comment'}).items():
+            size += len(value)
 
         if size != EOCD_MIN_LENGTH:
             raise ValueError(f"EOCD record size is {size} (without comment), expected {EOCD_MIN_LENGTH}")
