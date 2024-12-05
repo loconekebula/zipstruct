@@ -2,6 +2,7 @@ import hashlib
 import logging
 import os.path
 
+from src.ziphash.extract import extract_from_eocd
 from src.zipstruct.localheaders.lfh import LOGGER
 from src.zipstruct.utils.zipentry import ParsedZip
 import zipfile
@@ -38,9 +39,9 @@ if __name__ == "__main__":
     LOGGER.info(appended_pz.parsing_state)
 
     hash_func = hashlib.new('sha256')
-    hash_func.update(original_pz.eocd.raw.dump())
+    hash_func.update(extract_from_eocd(original_pz.eocd))
     print(hash_func.hexdigest())
     hash_func = hashlib.new('sha256')
-    hash_func.update(appended_pz.eocd.raw.dump(has_manifest=True))
+    hash_func.update(extract_from_eocd(appended_pz.eocd, has_manifest=True))
     print(hash_func.hexdigest())
 
