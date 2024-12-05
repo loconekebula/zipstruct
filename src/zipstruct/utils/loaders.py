@@ -56,12 +56,13 @@ def create_zip_file_entries(
         lfh = lfh_parser.parse_local_file_header(file, lfh_start)
         lfh_end = lfh_start + len(lfh.raw)
 
+        # Computing body offset range
+        body_end = lfh_end + cd.compressed_size
+
+        # Registering lfh and body ranges
         if parsing_state is not None:
             parsing_state.register_parsed(begin=lfh_start, end=lfh_end, title=f"LFH of '{lfh.file_name}'")
-
-        # Registering file body offset
-        body_end = lfh_end + cd.compressed_size
-        parsing_state.register_parsed(begin=lfh_end, end=body_end, title=f"BODY of '{lfh.file_name}'")
+            parsing_state.register_parsed(begin=lfh_end, end=body_end, title=f"BODY of '{lfh.file_name}'")
 
         # Loading data descriptor
         dd = None
