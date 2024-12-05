@@ -36,7 +36,7 @@ class RawDataDescriptor(BaseModel):
     """
 
     def __len__(self):
-        size = 0
+        size = 0 if self.signature is None else len(self.signature)
         for _, value in self.model_dump(exclude={'signature'}).items():
             size += len(value)
 
