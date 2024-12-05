@@ -1,5 +1,9 @@
+import hashlib
+import logging
 import os.path
+from pprint import pprint
 
+from src.ziphash.ziphash import compute_zip_hash
 from src.zipstruct.localheaders.lfh import LOGGER
 from src.zipstruct.utils.zipentry import ParsedZip
 import zipfile
@@ -15,11 +19,32 @@ def append_to_zip():
     shutil.copyfile(path, outp)
 
     with zipfile.ZipFile(outp, "a") as zf:
-        zf.writestr('manifest.c2pa', data='secure_manifest')
-        #zipf.write(source_path, destination)
+        # zf.writestr('manifest.c2pa', data='secure_manifest')
+        second_file = "/home/kebula/Desktop/signed.c2pa"
+        print(f"Adding a file having sizes: {os.path.getsize(second_file)}")
+        zf.write(second_file, '__keb_manifest.c2pa')
 
 
 if __name__ == "__main__":
+    # append_to_zip()
+    # exit()
+
+    LOGGER.setLevel(logging.INFO)
     path = "/home/kebula/Desktop/projects/ZipHashC2PA/data/inp/original_0.xlsx"
-    pz = ParsedZip.load(path)
-    LOGGER.debug(pz.parsing_state)
+    original_pz = ParsedZip.load(path)
+
+    path = "/home/kebula/Desktop/projects/ZipHashC2PA/data/tmp/appended.zip"
+    appended_pz = ParsedZip.load(path)
+
+    print(compute_zip_hash(original_pz))
+    print(compute_zip_hash(appended_pz))
+    LOGGER.info(original_pz.parsing_state)
+    LOGGER.info(appended_pz.parsing_state)
+
+    hash_func = hashlib.new('sha256')
+    hash_func.update(original_pz.eocd.raw.dump())
+    print(hash_func.hexdigest())
+    hash_func = hashlib.new('sha256')
+    hash_func.update(appended_pz.eocd.raw.dump(has_manifest=True))
+    print(hash_func.hexdigest())
+

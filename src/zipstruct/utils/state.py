@@ -22,6 +22,14 @@ class ZipParsingState:
         self.parsed_intervals.addi(begin=begin, end=end, data=title)
         self.unknown_intervals.chop(begin=begin, end=end)
 
+    def __str__(self):
+        bytes_parsed = sum([interval.end - interval.begin for interval in self.parsed_intervals])
+        return pprint.pformat({
+            "file_size": self.size,
+            "parsed_amount": f"{bytes_parsed}/{self.size}",
+            "parsed_rate": f"{(bytes_parsed / self.size * 100):.2f}%",
+        })
+
     def __repr__(self):
         bytes_parsed = sum([interval.end - interval.begin for interval in self.parsed_intervals])
         return pprint.pformat({

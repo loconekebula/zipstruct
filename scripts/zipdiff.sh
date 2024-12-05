@@ -2,7 +2,7 @@
 
 # Default values
 ORIGINAL_DEFAULT="/home/kebula/Desktop/projects/ZipHashC2PA/data/inp/original_0.xlsx"
-MODIFIED_DEFAULT="/home/kebula/Desktop/projects/ZipHashC2PA/data/tmp/modified_0.xlsx"
+MODIFIED_DEFAULT="/home/kebula/Desktop/projects/ZipHashC2PA/data/tmp/appended.zip"
 
 # Accept arguments or use defaults
 original="${1:-$ORIGINAL_DEFAULT}"
