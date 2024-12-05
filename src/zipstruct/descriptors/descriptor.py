@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, conbytes, conint
 
-DATA_DESCRIPTOR_SIGNATURE = b'\x08\x07\x4b\x50'
+DATA_DESCRIPTOR_SIGNATURE = b'\x50\x4b\x07\x08'
 INT_DATA_DESCRIPTOR_SIGNATURE = 0x08074b50
 DATA_DESCRIPTOR_MIN_LENGTH = 12
 DATA_DESCRIPTOR_MAX_LENGTH = 16
@@ -17,7 +17,7 @@ class RawDataDescriptor(BaseModel):
 
     signature: Optional[conbytes(min_length=4, max_length=4)] = DATA_DESCRIPTOR_SIGNATURE
     """ 
-    The optional signature field (4 bytes). If present, it is fixed to b'\x08\x07\x4b\x50'.
+    The optional signature field (4 bytes). If present, it is fixed to b'\x50\x4b\x07\x08'.
     """
 
     crc32: conbytes(min_length=4, max_length=4)

@@ -1,7 +1,6 @@
 from pydantic import BaseModel, conbytes, conint
 
-# Little endian (b'\x06\x05KP')
-EOCD_SIGNATURE = b'\x06\x05\x4b\x50'
+EOCD_SIGNATURE = b'\x50\x4b\x05\x06'
 INT_EOCD_SIGNATURE = 0x06054b50
 EOCD_MIN_LENGTH = 22
 
@@ -16,7 +15,7 @@ class RawEocd(BaseModel):
     signature: conbytes(min_length=4, max_length=4) = EOCD_SIGNATURE
     """ 
     End of Central Directory (EOCD) signature (4 bytes).
-    This field has a fixed value of b'\x06\x05\x4b\x50'.
+    This field has a fixed value of b'\x50\x4b\x05\x06'.
     """
 
     disk_number: conbytes(min_length=2, max_length=2)

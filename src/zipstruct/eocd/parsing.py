@@ -2,7 +2,7 @@ import struct
 from typing import BinaryIO
 
 from src.zipstruct.utils.common import unpack_little_endian
-from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, INT_EOCD_SIGNATURE, EndOfCentralDirectory
+from src.zipstruct.eocd.eocd import RawEocd, EOCD_MIN_LENGTH, EndOfCentralDirectory, EOCD_SIGNATURE
 
 import logging
 LOGGER = logging.getLogger("zipstruct")
@@ -20,7 +20,7 @@ def search_eocd_signature(f: BinaryIO) -> int:
     data = f.read(search_range)
 
     # Find the EOCD signature (0x06054b50) within the search range
-    eocd_offset = data.rfind(struct.pack('<I', INT_EOCD_SIGNATURE))
+    eocd_offset = data.rfind(EOCD_SIGNATURE)
     if eocd_offset == -1:
         raise ValueError("EOCD signature not found. Not a valid ZIP file.")
     return eocd_offset
@@ -40,9 +40,8 @@ def parse_eocd(f: BinaryIO, eocd_offset: int) -> EndOfCentralDirectory:
                      f"A comment is expected at the end of the file")
 
     # Check signature
-    eocd_signature = struct.unpack('<I', eocd[:4])[0]
-    if eocd_signature != INT_EOCD_SIGNATURE:
-        raise ValueError("Invalid EOCD signature.")
+    if eocd[0:4] != EOCD_SIGNATURE:
+        raise ValueError(f"'{eocd[0:4]}' is an invalid EOCD signature")
 
     # Extract the comment, if any
     comment_length = struct.unpack('<H', eocd[20:22])[0]
