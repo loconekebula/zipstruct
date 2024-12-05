@@ -115,6 +115,8 @@ class LocalFileHeader(BaseModel):
     This model represents the Local File Header, which describes a file stored in a ZIP archive.
 
     Details can be found in section '4.3.7' of: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+
+    Original raw bytes are stored inside the 'raw' field in little-endian order.
     """
 
     raw: RawLocalFileHeader

@@ -7,9 +7,12 @@ from typing import BinaryIO
 from src.zipstruct.centraldirs.centraldir import CentralDirectory
 from src.zipstruct.eocd import parsing as eocd_parser
 from src.zipstruct.centraldirs import parsing as cd_parser
-from src.zipstruct.eocd.eocd import RawEocd, EndOfCentralDirectory
+from src.zipstruct.eocd.eocd import EndOfCentralDirectory
 from src.zipstruct.localheaders.lfh import RawLocalFileHeader
 from src.zipstruct.localheaders import parsing as lfh_parser
+from src.zipstruct.descriptors.descriptor import DataDescriptor
+from src.zipstruct.descriptors import parsing as dd_parser
+
 
 import logging
 LOGGER = logging.getLogger("zipstruct")
@@ -24,6 +27,7 @@ class ParsingState:
         self.tree = IntervalTree()
         self.cds: list[CentralDirectory] = []
         self.lfhs : list[RawLocalFileHeader] = []
+        self.dds: list[DataDescriptor] = []
 
     def load(self, file: BinaryIO):
         LOGGER.debug("Loading EOCD...")
@@ -58,7 +62,13 @@ class ParsingState:
         for cd in cds:
             offset = cd.relative_offset_of_local_header
             lfh = lfh_parser.parse_local_file_header(file, offset)
-            self.tree.addi(offset, offset + len(lfh))
+            lfh_end = offset + len(lfh.raw)
+            self.tree.addi(offset, lfh_end)
+            if dd_parser.check_data_descriptor_presence(lfh):
+                dd = dd_parser.parse_data_descriptor(file, lfh_end)
+                self.dds.append(dd)
+                self.tree.addi(lfh_end, lfh_end + len(dd))
+
             LOGGER.debug(f"File '{lfh.file_name}' has compressed size: {cd.compressed_size}"
                          f" and uncompressed size: {cd.uncompressed_size}")
             lfhs.append(lfh)

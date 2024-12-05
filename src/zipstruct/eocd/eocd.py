@@ -11,8 +11,6 @@ class RawEocd(BaseModel):
     This model represents the End of Central Directory (EOCD) record, which is the footer of a ZIP file.
 
     Details can be found in section '4.3.16' of: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-
-    Each attribute is annotated with its expected type in order to simplify parsing
     """
 
     signature: conbytes(min_length=4, max_length=4) = EOCD_SIGNATURE
