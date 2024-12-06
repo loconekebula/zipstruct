@@ -1,3 +1,4 @@
+import os
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -7,7 +8,7 @@ from src.zipstruct.descriptors.descriptor import DataDescriptor
 from src.zipstruct.eocd.eocd import EndOfCentralDirectory
 from src.zipstruct.localheaders.lfh import LocalFileHeader
 from src.zipstruct.utils import loaders
-from src.zipstruct.utils.state import ZipParsingState
+from src.zipstruct.utils.state import ReadState
 
 import logging
 LOGGER = logging.getLogger("zipstruct")
@@ -29,14 +30,15 @@ class ZipFileEntry(BaseModel):
 class ParsedZip(BaseModel):
     entries: List[ZipFileEntry]
     eocd: EndOfCentralDirectory
-    parsing_state: ZipParsingState
+    parsing_state: ReadState
 
     class Config:
         arbitrary_types_allowed = True
 
     @staticmethod
     def load(path: str) -> "ParsedZip":
-        state = ZipParsingState(path)
+        file_size = os.path.getsize(path)
+        state = ReadState(file_size)
 
         with open(path, mode="rb") as f:
             eocd = loaders.load_eocd(f, state)
