@@ -1,3 +1,4 @@
+from intervaltree import Interval
 from src.zipstruct.utils.common import compare_models
 from typing import Optional
 
@@ -83,7 +84,7 @@ class DataDescriptor(BaseModel):
     The size of the uncompressed data (4 bytes). This field provides the original size of the file.
     """
 
-    _offset_start: int = None
+    interval: Interval = None
     """
     This is a custom field, it is not compliant with the standard.
     """

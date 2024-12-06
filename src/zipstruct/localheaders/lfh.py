@@ -1,5 +1,8 @@
 import sys
 from typing import Optional
+
+from intervaltree import Interval
+
 from src.zipstruct.utils.common import compare_models
 from pydantic import BaseModel, conbytes, conint
 
@@ -202,7 +205,7 @@ class LocalFileHeader(BaseModel):
     The content of this field may contain additional metadata about the file.
     """
 
-    _offset_start: int = None
+    interval: Interval = None
     """
     This is a custom field, it is not compliant with the standard.
     """

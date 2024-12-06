@@ -42,8 +42,10 @@ if __name__ == "__main__":
     # LOGGER.info(original_pz.parsing_state)
     # LOGGER.info(appended_pz.parsing_state)
 
-    original_hexdigest = compute_zip_hash(original_pz, has_manifest=False)
-    appended_hexdigest = compute_zip_hash(appended_pz, has_manifest=True)
+    original_hexdigest, state = compute_zip_hash(original_pz, has_manifest=False)
+    print(state)
+    appended_hexdigest, state = compute_zip_hash(appended_pz, has_manifest=True)
+    print(state)
 
     print(f"Original: {original_hexdigest}")
     print(f"Modified: {appended_hexdigest}")

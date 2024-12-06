@@ -1,5 +1,8 @@
 import hashlib
 import struct
+
+from intervaltree import Interval
+
 from src.zipstruct.centraldirs.centraldir import CentralDirectory
 from src.zipstruct.descriptors.descriptor import DataDescriptor
 from src.zipstruct.eocd.eocd import EndOfCentralDirectory
@@ -101,14 +104,23 @@ def extract_from_dd(dd: DataDescriptor):
     return aggregate
 
 
+def add_to_state(data, interval: Interval, state: ReadState):
+    state.registeri(
+        begin=interval.begin,
+        end=interval.begin + len(data),
+        title=interval.data
+    )
+
+
 def compute_zip_hash(pz: ParsedZip, has_manifest=False):
-    hash_state = ReadState(pz.parsing_state.size)   # TODO: Use this
+    hash_state = ReadState(pz.parsing_state.size)
 
     hash_func = hashlib.new('sha256')
 
     # Add EOCD first
-    hash_func.update(extract_from_eocd(pz.eocd, has_manifest=has_manifest))
-    # hash_state.register(begin=pz.eocd._offset_start, end=len(pz.eocd), title='EOCD ')
+    eocd_aggregate = extract_from_eocd(pz.eocd, has_manifest=has_manifest)
+    add_to_state(data=eocd_aggregate, interval=pz.eocd.interval, state=hash_state)
+    hash_func.update(eocd_aggregate)
 
     for entry in pz.entries:
         if entry.central_directory.file_name == "__keb_manifest.c2pa":
@@ -117,10 +129,17 @@ def compute_zip_hash(pz: ParsedZip, has_manifest=False):
             continue
 
         # Add CD, LFH, and DD
-        hash_func.update(extract_from_central_directory(entry.central_directory))
-        hash_func.update(extract_from_lfh(entry.local_file_header))
+        cd_aggregate = extract_from_central_directory(entry.central_directory)
+        add_to_state(data=cd_aggregate, interval=entry.central_directory.interval, state=hash_state)
+        hash_func.update(cd_aggregate)
+
+        lfh_aggregate = extract_from_lfh(entry.local_file_header)
+        add_to_state(data=lfh_aggregate, interval=entry.local_file_header.interval, state=hash_state)
+        hash_func.update(lfh_aggregate)
         if entry.data_descriptor is not None:
-            hash_func.update(extract_from_dd(entry.data_descriptor))
+            dd_aggregate = extract_from_dd(entry.data_descriptor)
+            add_to_state(data=dd_aggregate, interval=entry.data_descriptor.interval, state=hash_state)
+            hash_func.update(dd_aggregate)
 
     # Add file body
     with open(file=pz.path, mode="rb") as f:
@@ -131,7 +150,12 @@ def compute_zip_hash(pz: ParsedZip, has_manifest=False):
                 continue
             f.seek(entry.body_offset)
             chunk = f.read(entry.body_compressed_size)
+            hash_state.registeri(
+                begin=entry.body_offset,
+                end=entry.body_offset + len(chunk),
+                title=f"BODY of {entry.central_directory.file_name}"
+            )
             hash_func.update(chunk)
 
-    return hash_func.hexdigest()
+    return hash_func.hexdigest(), hash_state
 

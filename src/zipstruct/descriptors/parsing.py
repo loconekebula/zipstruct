@@ -30,15 +30,14 @@ def parse_data_descriptor(file: BinaryIO, offset: int):
         uncompressed_size = file.read(4),
     )
 
-    return unpack_from_raw(rdd, offset)
+    return unpack_from_raw(rdd)
 
 
-def unpack_from_raw(rdd: RawDataDescriptor, offset: int):
+def unpack_from_raw(rdd: RawDataDescriptor):
     return DataDescriptor(
         raw               = rdd,
         signature         = unpack_little_endian(rdd.signature) if rdd.signature is not None else None,
         crc32             = rdd.crc32,
         compressed_size   = unpack_little_endian(rdd.compressed_size),
         uncompressed_size = unpack_little_endian(rdd.uncompressed_size),
-        _offset_start     = offset
     )

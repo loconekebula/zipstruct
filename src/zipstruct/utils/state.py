@@ -13,11 +13,16 @@ class ReadState:
         self.unknown_intervals = IntervalTree(intervals=[Interval(begin=0, end=self.size)])
         self.parsed_intervals = IntervalTree()
 
-    def register(self, begin: int, end: int, title: str):
+    def registeri(self, begin: int, end: int, title: str):
+        interval = Interval(begin=begin, end=end, data=title)
+        self.register(interval)
+
+    def register(self, interval: Interval):
+        begin, end = interval.begin, interval.end
         if self.parsed_intervals.overlap(begin=begin, end=end):
             raise ValueError(f"Interval ({begin}, {end}) is overlapping with some "
                              f"other parsed interval: {self.parsed_intervals[begin:end]}")
-        self.parsed_intervals.addi(begin=begin, end=end, data=title)
+        self.parsed_intervals.add(interval)
         self.unknown_intervals.chop(begin=begin, end=end)
 
     def raise_for_not_existing(self, begin: int, end: int):

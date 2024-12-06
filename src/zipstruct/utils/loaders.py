@@ -1,3 +1,4 @@
+from intervaltree import Interval
 from typing import BinaryIO, Dict
 
 from src.zipstruct.centraldirs.centraldir import CentralDirectory
@@ -18,11 +19,13 @@ def load_eocd(file: BinaryIO, parsing_state: ReadState = None):
     eocd = eocd_parser.parse_eocd(file, begin)
     end = begin + len(eocd.raw)
 
+    interval = Interval(begin=begin, end=end, data='EOCD')
     if parsing_state is not None:
         if parsing_state.size != end:
             raise ValueError("EOCD's end offset should match with the file size")
-        parsing_state.register(begin=begin, end=end, title='EOCD')
+        parsing_state.register(interval)
 
+    eocd.interval = interval
     LOGGER.debug(f"EOCD successfully loaded from bytes {begin}:{end}")
     return eocd
 
@@ -36,7 +39,11 @@ def load_central_directories(file: BinaryIO, offset: int, parsing_state: ReadSta
     begin = offset
     for cd in centraldirs:
         end = begin + len(cd.raw)
-        parsing_state.register(begin=begin, end=end, title=f"CD of '{cd.file_name}'")
+
+        interval = Interval(begin=begin, end=end, data=f"CD of '{cd.file_name}'")
+        parsing_state.register(interval)
+        cd.interval = interval
+
         begin = end
     return centraldirs
 
@@ -55,21 +62,25 @@ def create_zip_file_entries(
         lfh_start = cd.relative_offset_of_local_header
         lfh = lfh_parser.parse_local_file_header(file, lfh_start)
         lfh_end = lfh_start + len(lfh.raw)
+        lfh.interval = Interval(begin=lfh_start, end=lfh_end, data=f"LFH of '{lfh.file_name}'")
 
         # Computing body offset range
         body_end = lfh_end + cd.compressed_size
 
         # Registering lfh and body ranges
         if parsing_state is not None:
-            parsing_state.register(begin=lfh_start, end=lfh_end, title=f"LFH of '{lfh.file_name}'")
-            parsing_state.register(begin=lfh_end, end=body_end, title=f"BODY of '{lfh.file_name}'")
+            parsing_state.register(lfh.interval)
+            body_interval = Interval(begin=lfh_end, end=body_end, data=f"BODY of '{lfh.file_name}'")
+            parsing_state.register(body_interval)
 
         # Loading data descriptor
         dd = None
         if dd_parser.check_data_descriptor_presence(lfh):
             dd = dd_parser.parse_data_descriptor(file, body_end)
+            dd_interval = Interval(begin=body_end, end=body_end + len(dd), data=f"DD of '{lfh.file_name}'")
+            dd.interval = dd_interval
             if parsing_state is not None:
-                parsing_state.register(begin=body_end, end=body_end + len(dd), title=f"DD of '{lfh.file_name}'")
+                parsing_state.register(dd_interval)
 
         entries[cd.file_name] = {
             'central_directory'       : cd,

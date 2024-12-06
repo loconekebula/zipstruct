@@ -1,3 +1,4 @@
+from intervaltree import Interval
 from src.zipstruct.utils.common import compare_models
 from pydantic import BaseModel, conbytes, conint
 
@@ -146,7 +147,7 @@ class EndOfCentralDirectory(BaseModel):
     If no comment is present, or if is not utf8-8, this field will be empty.
     """
 
-    _offset_start: int = None
+    interval: Interval = None
     """
     This is a custom field, it is not compliant with the standard.
     """

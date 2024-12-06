@@ -40,10 +40,10 @@ def parse_local_file_header(file: BinaryIO, offset: int):
 
     LOGGER.debug(f"Parsed local file header of file '{unpack_little_endian(rlfh.file_name, encoding='utf-8')}'")
 
-    return unpack_from_raw(rlfh, offset)
+    return unpack_from_raw(rlfh)
 
 
-def unpack_from_raw(rlfh: RawLocalFileHeader, offset: int):
+def unpack_from_raw(rlfh: RawLocalFileHeader):
     ### 4.4.4 general purpose bit flag: (2 bytes)
     gpb = struct.unpack('<H', rlfh.general_purpose_flags)[0]
     utf8 = bool(gpb & GeneralPurposeBitMasks.UTF8_LANGUAGE_ENCODING.value)
@@ -63,5 +63,4 @@ def unpack_from_raw(rlfh: RawLocalFileHeader, offset: int):
         extra_field_length         = unpack_little_endian(rlfh.extra_field_length),
         file_name                  = unpack_little_endian(rlfh.file_name, encoding=encoding),
         extra_field                = rlfh.extra_field,
-        _offset_start              = offset
     )

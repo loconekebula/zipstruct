@@ -59,10 +59,10 @@ def parse_eocd(f: BinaryIO, eocd_offset: int) -> EndOfCentralDirectory:
         comment                                   = comment
     )
 
-    return unpack_from_raw(reocd, eocd_offset)
+    return unpack_from_raw(reocd)
 
 
-def unpack_from_raw(reocd: RawEocd, eocd_offset: int):
+def unpack_from_raw(reocd: RawEocd):
     return EndOfCentralDirectory(
         raw                                       = reocd,
         signature                                 = unpack_little_endian(reocd.signature),
@@ -74,5 +74,4 @@ def unpack_from_raw(reocd: RawEocd, eocd_offset: int):
         offset_of_start_of_central_directory      = unpack_little_endian(reocd.offset_of_start_of_central_directory),
         comment_length                            = unpack_little_endian(reocd.comment_length),
         comment                                   = unpack_little_endian(reocd.comment, encoding='utf-8'),
-        _offset_start                             = eocd_offset
     )
