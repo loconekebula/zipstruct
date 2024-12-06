@@ -72,12 +72,25 @@ def create_zip_file_entries(
                 parsing_state.register(begin=body_end, end=body_end + len(dd), title=f"DD of '{lfh.file_name}'")
 
         entries[cd.file_name] = {
-            'central_directory'    : cd,
-            'local_file_header'    : lfh,
-            'data_descriptor'      : dd,
-            'body_offset'          : lfh_end,
-            'body_compressed_size' : (body_end - lfh_end),
+            'central_directory'       : cd,
+
+            'local_file_header_offset': cd.relative_offset_of_local_header,
+            'local_file_header'       : lfh,
+
+            'body_offset'             : lfh_end,
+            'body_compressed_size'    : (body_end - lfh_end),
+
+            'data_descriptor_offset'  : body_end,
+            'data_descriptor'         : dd,
+
         }
+
+        # Check correctness of the entries ranges
+        parsing_state.raise_for_not_existing(begin=cd.relative_offset_of_local_header, end=lfh_end)  # lfh
+        parsing_state.raise_for_not_existing(begin=lfh_end, end=body_end)
+        if dd is not None:
+            parsing_state.raise_for_not_existing(begin=body_end, end=body_end + len(dd))
+
         LOGGER.debug(f"Successfully parsed '{lfh.file_name}' having compressed size: {cd.compressed_size}")
     return entries
 

@@ -20,6 +20,16 @@ class ReadState:
         self.parsed_intervals.addi(begin=begin, end=end, data=title)
         self.unknown_intervals.chop(begin=begin, end=end)
 
+    def raise_for_not_existing(self, begin: int, end: int):
+        result = self.parsed_intervals.envelop(begin=begin, end=end)
+        size = len(result)
+        if size > 1:
+            raise ValueError(f"Interval ({begin}, {end}) envelops multiple existing "
+                             f"intervals: {self.parsed_intervals[begin:end]}")
+        if size == 0:
+            raise ValueError(f"Interval ({begin}, {end}) does not exists")
+        return
+
     def __str__(self):
         bytes_read = sum([interval.end - interval.begin for interval in self.parsed_intervals])
         return pprint.pformat({
