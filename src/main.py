@@ -1,7 +1,8 @@
 import hashlib
 import os.path
 
-from src.ziphash.extract import extract_from_eocd, extract_from_central_directory, extract_from_lfh, extract_from_dd
+from src.ziphash.extract import extract_from_eocd, extract_from_central_directory, extract_from_lfh, extract_from_dd, \
+    compute_zip_hash
 from src.zipstruct.utils.zipentry import ParsedZip
 import zipfile
 import shutil
@@ -41,23 +42,9 @@ if __name__ == "__main__":
     # LOGGER.info(original_pz.parsing_state)
     # LOGGER.info(appended_pz.parsing_state)
 
-    hash_func = hashlib.new('sha256')
-    hash_func.update(extract_from_eocd(original_pz.eocd))
-    for entry in original_pz.entries:
-        hash_func.update(extract_from_central_directory(entry.central_directory))
-        hash_func.update(extract_from_lfh(entry.local_file_header))
-        if entry.data_descriptor is not None:
-            hash_func.update(extract_from_dd(entry.data_descriptor))
-    print(hash_func.hexdigest())
+    original_hexdigest = compute_zip_hash(original_pz, has_manifest=False)
+    appended_hexdigest = compute_zip_hash(appended_pz, has_manifest=True)
 
-    hash_func = hashlib.new('sha256')
-    hash_func.update(extract_from_eocd(appended_pz.eocd, has_manifest=True))
-    for entry in appended_pz.entries:
-        if entry.central_directory.file_name == "__keb_manifest.c2pa":
-            continue
-        hash_func.update(extract_from_central_directory(entry.central_directory))
-        hash_func.update(extract_from_lfh(entry.local_file_header))
-        if entry.data_descriptor is not None:
-            hash_func.update(extract_from_dd(entry.data_descriptor))
-    print(hash_func.hexdigest())
+    print(f"Original: {original_hexdigest}")
+    print(f"Modified: {appended_hexdigest}")
 

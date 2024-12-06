@@ -1,8 +1,11 @@
+import hashlib
 import struct
 from src.zipstruct.centraldirs.centraldir import CentralDirectory
 from src.zipstruct.descriptors.descriptor import DataDescriptor
 from src.zipstruct.eocd.eocd import EndOfCentralDirectory
 from src.zipstruct.localheaders.lfh import LocalFileHeader
+from src.zipstruct.utils.state import ReadState, LOGGER
+from src.zipstruct.utils.zipentry import ParsedZip
 
 
 # NOTE: model_dump() will not be used in order to specify explicitly the dump order
@@ -96,3 +99,39 @@ def extract_from_dd(dd: DataDescriptor):
         + rdd.uncompressed_size
     )
     return aggregate
+
+
+def compute_zip_hash(pz: ParsedZip, has_manifest=False):
+    hash_state = ReadState(pz.parsing_state.size)   # TODO: Use this
+
+    hash_func = hashlib.new('sha256')
+
+    # Add EOCD first
+    hash_func.update(extract_from_eocd(pz.eocd, has_manifest=has_manifest))
+    # hash_state.register(begin=pz.eocd._offset_start, end=len(pz.eocd), title='EOCD ')
+
+    for entry in pz.entries:
+        if entry.central_directory.file_name == "__keb_manifest.c2pa":
+            # Ignore manifest if present
+            LOGGER.warning("Manifest found, it will be ignored")
+            continue
+
+        # Add CD, LFH, and DD
+        hash_func.update(extract_from_central_directory(entry.central_directory))
+        hash_func.update(extract_from_lfh(entry.local_file_header))
+        if entry.data_descriptor is not None:
+            hash_func.update(extract_from_dd(entry.data_descriptor))
+
+    # Add file body
+    with open(file=pz.path, mode="rb") as f:
+        for entry in pz.entries:
+            if entry.central_directory.file_name == "__keb_manifest.c2pa":
+                # Ignore manifest if present
+                LOGGER.warning("Manifest found, it will be ignored")
+                continue
+            f.seek(entry.body_offset)
+            chunk = f.read(entry.body_compressed_size)
+            hash_func.update(chunk)
+
+    return hash_func.hexdigest()
+
