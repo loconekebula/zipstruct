@@ -1,3 +1,4 @@
+from src.zipstruct.utils.common import compare_models
 from pydantic import BaseModel, conbytes, conint
 from typing import Annotated
 
@@ -264,3 +265,8 @@ class CentralDirectory(BaseModel):
 
     def __len__(self):
         return len(self.raw)
+
+
+    def compare(self, new: 'CentralDirectory', filename=''):
+        prefix = f'{filename}.CD' if filename else ''
+        return compare_models(a=self, b=new, exclude={'raw'}, prefix=prefix)

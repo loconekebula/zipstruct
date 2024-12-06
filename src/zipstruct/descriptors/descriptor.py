@@ -1,3 +1,4 @@
+from src.zipstruct.utils.common import compare_models
 from typing import Optional
 
 from pydantic import BaseModel, conbytes, conint
@@ -85,3 +86,7 @@ class DataDescriptor(BaseModel):
     def __len__(self):
         return len(self.raw)
 
+
+    def compare(self, new: 'DataDescriptor', filename=''):
+        prefix = f'{filename}.DD' if filename else ''
+        return compare_models(a=self, b=new, exclude={'raw'}, prefix=prefix)

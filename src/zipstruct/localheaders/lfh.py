@@ -1,8 +1,11 @@
 import sys
-from typing import Optional, BinaryIO
+from typing import Optional
+from src.zipstruct.utils.common import compare_models
 from pydantic import BaseModel, conbytes, conint
 
 import logging
+
+
 LOGGER = logging.getLogger("zipstruct")
 LOGGER.addHandler(logging.StreamHandler(sys.stderr))
 LOGGER.setLevel(logging.DEBUG)
@@ -203,3 +206,7 @@ class LocalFileHeader(BaseModel):
     def __len__(self):
         return len(self.raw)
 
+
+    def compare(self, new: 'LocalFileHeader', filename=''):
+        prefix = f'{filename}.LFH' if filename else ''
+        return compare_models(a=self, b=new, exclude={'raw'}, prefix=prefix)

@@ -1,4 +1,5 @@
 import struct
+from pydantic import BaseModel
 from enum import Enum
 
 import logging
@@ -26,6 +27,19 @@ def unpack_little_endian(data: bytes, encoding: str = None):
         raise
     fmt = f'<{code}'
     return struct.unpack(fmt, data)[0]
+
+
+def compare_models(a: 'BaseModel', b: 'BaseModel', exclude: set = None, prefix=''):
+    if exclude is None:
+        exclude = set()
+    a = a.model_dump(exclude=exclude)
+    b = b.model_dump(exclude=exclude)
+
+    prefix = f'{prefix}.' if prefix else ''
+    for name in a.keys():
+        if a[name] == b[name]:
+            continue
+        print(f"diff '{prefix}{name}': {a[name]} != {b[name]}")
 
 
 class GeneralPurposeBitMasks(Enum):

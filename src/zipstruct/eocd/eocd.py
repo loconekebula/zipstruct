@@ -1,4 +1,4 @@
-import struct
+from src.zipstruct.utils.common import compare_models
 from pydantic import BaseModel, conbytes, conint
 
 EOCD_SIGNATURE = b'\x50\x4b\x05\x06'
@@ -150,3 +150,6 @@ class EndOfCentralDirectory(BaseModel):
     def __len__(self):
         return len(self.raw)
 
+
+    def compare(self, new: 'EndOfCentralDirectory'):
+        return compare_models(a=self, b=new, exclude={'raw'}, prefix='EOCD')

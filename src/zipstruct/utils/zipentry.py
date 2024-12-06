@@ -9,6 +9,8 @@ from src.zipstruct.localheaders.lfh import LocalFileHeader
 from src.zipstruct.utils import loaders
 from src.zipstruct.utils.state import ZipParsingState
 
+import logging
+LOGGER = logging.getLogger("zipstruct")
 
 
 class ZipFileEntry(BaseModel):
@@ -52,4 +54,29 @@ class ParsedZip(BaseModel):
             )
             zip_entries.append(zfe)
         return ParsedZip(entries=zip_entries, eocd=eocd, parsing_state=state)
+
+
+    def compare(self, new: 'ParsedZip'):
+        self.eocd.compare(new.eocd)
+        if len(self.entries) != len(new.entries):
+            LOGGER.warning(
+                f"Mismatch between number of files inside the zips ({len(self.entries)} != {len(new.entries)})"
+            )
+
+        for entry in self.entries:
+            name = entry.central_directory.file_name
+            iterator = iter(x for x in new.entries if x.central_directory.file_name == name)
+            correspondent = next(iterator, None)
+            if not correspondent:
+                LOGGER.warning(f"File '{name}' has not been found in the new zip")
+                continue
+
+            entry.central_directory.compare(correspondent.central_directory)
+            entry.local_file_header.compare(correspondent.local_file_header)
+            if entry.data_descriptor:
+                entry.data_descriptor.compare(correspondent.data_descriptor, filename=name)
+            if entry.body_offset != correspondent.body_offset:
+                print(f"diff 'body_offset': {entry.body_offset} != {correspondent.body_offset}")
+            if entry.body_compressed_size != correspondent.body_compressed_size:
+                print(f"diff 'body_compressed_size': {entry.body_compressed_size} != {correspondent.body_compressed_size}")
 
