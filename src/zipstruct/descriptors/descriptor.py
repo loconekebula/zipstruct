@@ -83,6 +83,11 @@ class DataDescriptor(BaseModel):
     The size of the uncompressed data (4 bytes). This field provides the original size of the file.
     """
 
+    _offset_start: int = None
+    """
+    This is a custom field, it is not compliant with the standard.
+    """
+
     def __len__(self):
         return len(self.raw)
 

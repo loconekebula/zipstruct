@@ -262,6 +262,10 @@ class CentralDirectory(BaseModel):
     This will tried to be parsed in 'utf-8' or 'cp437', if an error occurs during parsing it will be None
     """
 
+    _offset_start: int = None
+    """
+    This is a custom field, it is not compliant with the standard.
+    """
 
     def __len__(self):
         return len(self.raw)

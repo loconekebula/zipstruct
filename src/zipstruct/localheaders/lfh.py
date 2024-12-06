@@ -202,6 +202,10 @@ class LocalFileHeader(BaseModel):
     The content of this field may contain additional metadata about the file.
     """
 
+    _offset_start: int = None
+    """
+    This is a custom field, it is not compliant with the standard.
+    """
 
     def __len__(self):
         return len(self.raw)

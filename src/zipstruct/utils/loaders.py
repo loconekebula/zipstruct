@@ -86,10 +86,11 @@ def create_zip_file_entries(
         }
 
         # Check correctness of the entries ranges
-        parsing_state.raise_for_not_existing(begin=cd.relative_offset_of_local_header, end=lfh_end)  # lfh
-        parsing_state.raise_for_not_existing(begin=lfh_end, end=body_end)
-        if dd is not None:
-            parsing_state.raise_for_not_existing(begin=body_end, end=body_end + len(dd))
+        if parsing_state is not None:
+            parsing_state.raise_for_not_existing(begin=cd.relative_offset_of_local_header, end=lfh_end)  # lfh
+            parsing_state.raise_for_not_existing(begin=lfh_end, end=body_end)
+            if dd is not None:
+                parsing_state.raise_for_not_existing(begin=body_end, end=body_end + len(dd))
 
         LOGGER.debug(f"Successfully parsed '{lfh.file_name}' having compressed size: {cd.compressed_size}")
     return entries

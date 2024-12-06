@@ -28,6 +28,7 @@ class ZipFileEntry(BaseModel):
 
 
 class ParsedZip(BaseModel):
+    path: str
     entries: List[ZipFileEntry]
     eocd: EndOfCentralDirectory
     parsing_state: ReadState
@@ -55,7 +56,7 @@ class ParsedZip(BaseModel):
                 body_compressed_size = value["body_compressed_size"],
             )
             zip_entries.append(zfe)
-        return ParsedZip(entries=zip_entries, eocd=eocd, parsing_state=state)
+        return ParsedZip(path=path, entries=zip_entries, eocd=eocd, parsing_state=state)
 
 
     def compare(self, new: 'ParsedZip'):

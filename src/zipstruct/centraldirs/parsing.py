@@ -83,12 +83,12 @@ def parse_central_directory(f: BinaryIO, offset: int) -> CentralDirectory:
         raise ValueError(f"Incomplete CentralDirectory record, mismatch between "
                          f"expected ({expected}) and current ({current}) amount")
 
-    cd = unpack_from_raw(rcd)
+    cd = unpack_from_raw(rcd, offset)
     LOGGER.debug(f"Parsed central directory of file '{cd.file_name}' from bytes {offset}:{offset+len(rcd)}")
     return cd
 
 
-def unpack_from_raw(rcd: RawCentralDirectory):
+def unpack_from_raw(rcd: RawCentralDirectory, offset):
     ### 4.4.4 general purpose bit flag: (2 bytes)
     gpb = struct.unpack('<H', rcd.general_purpose_flags)[0]
     utf8 = bool(gpb & GeneralPurposeBitMasks.UTF8_LANGUAGE_ENCODING.value)
@@ -115,4 +115,5 @@ def unpack_from_raw(rcd: RawCentralDirectory):
         file_name                       = unpack_little_endian(rcd.file_name, encoding),
         extra_field                     = rcd.extra_field,
         file_comment                    = unpack_little_endian(rcd.signature, encoding),
+        _offset_start                   = offset,
     )
